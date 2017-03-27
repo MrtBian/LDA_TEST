@@ -2,9 +2,12 @@ package text_process;
 
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -21,7 +24,6 @@ public class Textread {
 	public Textread(){
 		stop_words sw = new stop_words();
 		stopwords = sw.stopWords;
-		//to do...
 		docs = new ArrayList<ArrayList<String>>();
 	}
 	
@@ -40,14 +42,16 @@ public class Textread {
 	            		continue;
 	            	}
 	                String str = tempString.substring(0, 3);
-	                System.out.println(str);
+	                //System.out.println(str);
 	            	if(str.equals("摘要:")){
 	            		String temp = tempString.substring(3);
-	            		String []strs = temp.split("[ ,.?!()]");
+	            		String []strs = temp.split("[ ,.?!()1-9]");
 	            		ArrayList<String> tempArray = new ArrayList<String>();
 	            		for(String s:strs){
 	            			s=s.toLowerCase();
-	            			tempArray.add(s);
+	            			if(!stopwords.contains(s)&&s.length()>1){
+	            				tempArray.add(s);
+	            			}
 	            		}
 	            		docs.add(tempArray);
 	            	}
@@ -65,10 +69,40 @@ public class Textread {
 	        }
 		}
 	}
+	
+	public void writeData(String datapath){
+		File file = new File(datapath);
+		BufferedWriter writer = null;
+        try {
+        	writer = new BufferedWriter(new OutputStreamWriter(
+        			new FileOutputStream(file, true)));
+        	ArrayList<ArrayList<String>> temp = docs;
+        	int numofdoc = temp.size();
+        	writer.write(numofdoc+"\n");
+        	for(ArrayList<String> arr:temp){
+    			for(String s:arr){
+    				writer.append(s+" ");
+    			}
+    			writer.append("\n");
+    		}
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (writer != null) {
+                try {
+                	writer.close();
+                } catch (IOException e1) {
+                }
+            }
+        }
+	}
+	
 	public static void main(String args[]) throws IOException{
 		Textread textread = new Textread();
 		textread.readDocs();
 		ArrayList<ArrayList<String>> temp = textread.docs;
+		/*
 		int c=0,lc=0;
 		for(ArrayList<String> arr:temp){
 			for(String s:arr){
@@ -79,6 +113,8 @@ public class Textread {
 			System.out.println();
 		}
 		System.out.println(c+" "+lc);
+		*/
+		textread.writeData("Data/data.txt");
 	}
 
 }
